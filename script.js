@@ -706,4 +706,115 @@ console.log(`
    - Enable offline caching with Service Worker
 `);
 
+
+
+/* ================================
+   TEACHER VIDEO SELECTION
+================================ */
+function teacherSelectSubject(subject) {
+    selectedSubject = subject;
+    updateChapterHeader();
+    hideElement('teacherSubjectSelection');
+    showElement('teacherChapterSelection');
+    loadChapters(subject, 'teacherChapterList', true);
+}
+
+function teacherSelectChapter(chapterTitle, chapterDescription, videoPath) {
+    selectedChapter = chapterTitle;
+    selectedVideoPath = videoPath;
+
+    hideElement('teacherChapterSelection');
+    showElement('teacherVideoPlayer');
+
+    const videoTitleEl = document.getElementById('teacherVideoTitle');
+    if (videoTitleEl) videoTitleEl.textContent = chapterTitle;
+
+    loadVideo(videoPath, 'teacherVideoFrame', 'teacherDownloadBtn');
+}
+
+/* ================================
+   FEEDBACK & TEACHER DASHBOARD
+================================ */
+function loadFeedbackData() {
+    const feedbackContainer = document.getElementById('feedbackContainer');
+    const noFeedback = document.getElementById('noFeedback');
+    
+    if (!feedbackContainer) return;
+    
+    try {
+        const storedFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+        if (storedFeedback.length === 0) {
+            feedbackContainer.style.display = 'none';
+            if (noFeedback) noFeedback.style.display = 'block';
+            return;
+        }
+        
+        feedbackContainer.innerHTML = '';
+        storedFeedback.forEach(feedback => {
+            const feedbackCard = createFeedbackCard(feedback);
+            feedbackContainer.appendChild(feedbackCard);
+        });
+        
+        feedbackContainer.style.display = 'grid';
+        if (noFeedback) noFeedback.style.display = 'none';
+    } catch (error) {
+        console.error('Error loading feedback data:', error);
+        if (noFeedback) noFeedback.style.display = 'block';
+    }
+}
+
+function createFeedbackCard(feedback) {
+    const card = document.createElement('div');
+    card.className = 'feedback-card';
+    const stars = '★'.repeat(feedback.rating) + '☆'.repeat(5 - feedback.rating);
+    card.innerHTML = `
+        <div class="feedback-header">
+            <span class="student-id">Student ID: ${feedback.studentId}</span>
+            <span class="feedback-date">${new Date(feedback.timestamp).toLocaleDateString()}</span>
+        </div>
+        <div class="feedback-content">
+            <p><strong>Subject:</strong> ${feedback.subject}</p>
+            <p><strong>Chapter:</strong> ${feedback.chapter}</p>
+            <p><strong>Rating:</strong> ${stars}</p>
+            <p><strong>Comment:</strong> ${feedback.comment}</p>
+        </div>
+    `;
+    return card;
+}
+
+/* ================================
+   INIT + EVENTS
+================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+    const userType = sessionStorage.getItem('userType');
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage.includes('dashboard') && !userType) {
+        alert('Please login first to access the dashboard.');
+        window.location.href = 'index.html';
+    }
+    if (userType === 'teacher' && currentPage.includes('teacher-dashboard')) {
+        setInterval(loadFeedbackData, 30000);
+    }
+});
+
+/* ================================
+   INIT DASHBOARD
+================================ */
+function initializeDashboard() {
+    const userType = sessionStorage.getItem('userType');
+    const userId = sessionStorage.getItem('userId');
+    
+    const studentNameElement = document.getElementById('studentName');
+    if (studentNameElement && userType === 'student' && userId) {
+        studentNameElement.textContent = `Welcome, ${userId}`;
+    }
+    
+    const teacherNameElement = document.getElementById('teacherName');
+    if (teacherNameElement && userType === 'teacher' && userId) {
+        teacherNameElement.textContent = `Welcome, ${userId}`;
+        loadFeedbackData();
+    }
+}
+
 /* ===== End of Script ===== */
