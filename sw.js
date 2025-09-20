@@ -8,7 +8,7 @@ const ASSETS = [
   "/teacher-dashboard.html",
   "/css/styles.css",
   "/js/script.js",
-  "/assets/icons/icon-512.png",
+  "/assets/logo.png",
   "/assets/icons/icon-192.png",
   "/assets/icons/icon-512.png"
 ];
