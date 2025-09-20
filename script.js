@@ -11,17 +11,17 @@ const subjectChapters = {
         { 
             title: 'Chapter 1: Real Numbers', 
             description: 'Introduction to real numbers and their properties', 
-            video: 'math-real-numbers.mp4' 
+            video: 'english-tenses.mp4' 
         },
         { 
             title: 'Chapter 2: Polynomials', 
             description: 'Understanding polynomials and their operations', 
-            video: 'math-polynomials.mp4' 
+            video: 'hindi-nibandh-lekhan.mp4' 
         },
         { 
             title: 'Chapter 3: Linear Equations', 
             description: 'Solving linear equations in two variables', 
-            video: 'math-linear-equations.mp4' 
+            video: 'science-life-processes.mp4' 
         },
         { 
             title: 'Chapter 4: Quadratic Equations', 
@@ -33,12 +33,12 @@ const subjectChapters = {
         { 
             title: 'Chapter 1: Light and Reflection', 
             description: 'Properties of light and reflection phenomena', 
-            video: 'science-light-reflection.mp4' 
+            video: 'english-tenses.mp4' 
         },
         { 
             title: 'Chapter 2: Acids and Bases', 
             description: 'Chemical properties of acids and bases', 
-            video: 'science-acids-bases.mp4' 
+            video: 'hindi-nibandh-lekhan.mp4' 
         },
         { 
             title: 'Chapter 3: Life Processes', 
@@ -47,7 +47,7 @@ const subjectChapters = {
         },
         { 
             title: 'Chapter 4: Natural Resources', 
-            description: 'Management of natural resources', 
+            description: 'math-quadratic-equations.mp4', 
             video: 'science-natural-resources.mp4' 
         }
     ],
@@ -55,12 +55,12 @@ const subjectChapters = {
         { 
             title: 'Chapter 1: Letter to God', 
             description: 'A story about faith and hope', 
-            video: 'english-letter-to-god.mp4' 
+            video: 'hindi-nibandh-lekhan.mp4' 
         },
         { 
             title: 'Chapter 2: Nelson Mandela', 
             description: 'Biography of Nelson Mandela', 
-            video: 'english-nelson-mandela.mp4' 
+            video: 'math-quadratic-equations.mp4' 
         },
         { 
             title: 'Chapter 3: Grammar - Tenses', 
@@ -70,24 +70,24 @@ const subjectChapters = {
         { 
             title: 'Chapter 4: Writing Skills', 
             description: 'Improving writing and composition skills', 
-            video: 'english-writing-skills.mp4' 
+            video: 'science-life-processes.mp4' 
         }
     ],
     'Hindi': [
         { 
             title: 'Chapter 1: हिंदी वर्णमाला', 
             description: 'हिंदी वर्णमाला और उसके नियम', 
-            video: 'hindi-varnmala.mp4' 
+            video: 'english-tenses.mp4' 
         },
         { 
             title: 'Chapter 2: व्याकरण - काल', 
             description: 'हिंदी व्याकरण में काल के प्रकार', 
-            video: 'hindi-kaal.mp4' 
+            video: 'math-quadratic-equations.mp4' 
         },
         { 
             title: 'Chapter 3: कहानी - दो बैलों की कथा', 
             description: 'प्रेमचंद की प्रसिद्ध कहानी', 
-            video: 'hindi-do-bailon-ki-katha.mp4' 
+            video: 'science-life-processes.mp4' 
         },
         { 
             title: 'Chapter 4: निबंध लेखन', 
@@ -818,4 +818,5 @@ function initializeDashboard() {
 }
 
 /* ===== End of Script ===== */
+
 
