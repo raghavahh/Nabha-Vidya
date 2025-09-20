@@ -48,7 +48,7 @@ const subjectChapters = {
         { 
             title: 'Chapter 4: Natural Resources', 
             description: 'math-quadratic-equations.mp4', 
-            video: 'science-natural-resources.mp4' 
+            video: 'math-quadratic-equations.mp4' 
         }
     ],
     'English': [
@@ -818,5 +818,6 @@ function initializeDashboard() {
 }
 
 /* ===== End of Script ===== */
+
 
 
