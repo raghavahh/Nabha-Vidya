@@ -1,6 +1,6 @@
 {
-  "name": "Nabha Vidya LMS",
-  "short_name": "Vidya LMS",
+  "name": "Nabha Vidya",
+  "short_name": "Nabha Vidya",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -18,4 +18,5 @@
       "type": "image/png"
     }
   ]
+
 }
