@@ -1,11 +1,14 @@
 {
-  "name": "Nabha Vidya",
-  "short_name": "Nabha Vidya",
+  "name": "Nabha Vidya LMS",
+  "short_name": "NabhaVidya",
+  "description": "Learning Management System for SIH25019",
+  "version": "1.0.0",
   "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1a73e8",
-  "orientation": "portrait",
+  "theme_color": "#0d6efd",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
@@ -18,5 +21,4 @@
       "type": "image/png"
     }
   ]
-
 }
