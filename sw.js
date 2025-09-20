@@ -1,79 +1,46 @@
-const CACHE_NAME = "nabha-vidya-v2.0";
-const STATIC_CACHE = "nabha-static-v2.0";
-const DYNAMIC_CACHE = "nabha-dynamic-v2.0";
+const CACHE_NAME = 'nabha-vidya-v1.0';
+const STATIC_CACHE = 'nabha-static-v1.0';
+const DYNAMIC_CACHE = 'nabha-dynamic-v1.0';
 
-// Static assets to cache immediately
+// Base path for GitHub Pages
+const BASE_PATH = '/Nabha-Vidya';
+
+// Static assets that should be cached immediately
 const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/student-dashboard.html", 
-  "/teacher-dashboard.html",
-  "/styles.css",
-  "/script.js",
-  "/manifest.json",
-  "/logo-removebg-preview.png",
-  "/assets/icons/icon-192.png",
-  "/assets/icons/icon-512.png"
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/student-dashboard.html`,
+  `${BASE_PATH}/teacher-dashboard.html`,
+  `${BASE_PATH}/styles.css`,
+  `${BASE_PATH}/script.js`,
+  `${BASE_PATH}/manifest.json`,
+  `${BASE_PATH}/logo-removebg-preview.png`,
+  // Add your icons when created
+  `${BASE_PATH}/icons/icon-192.png`,
+  `${BASE_PATH}/icons/icon-512.png`
 ];
 
-// Video files and other large assets (cache on demand)
-const DYNAMIC_ASSETS = [
-  "/assets/videos/",
-  "/api/"
-];
-
-// Helper: Safe cache addition with error handling
-async function safeCacheAdd(cache, url) {
-  try {
-    const response = await fetch(url, { 
-      method: "GET",
-      cache: "no-cache" 
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.status}`);
-    }
-    
-    await cache.put(url, response.clone());
-    console.log(`✅ Cached: ${url}`);
-    return true;
-  } catch (err) {
-    console.warn(`⚠️ Skipped caching: ${url} (${err.message})`);
-    return false;
-  }
-}
-
-// Install Service Worker - Cache static assets
-self.addEventListener("install", (event) => {
-  console.log("📦 Service Worker: Installing...");
+// Install event - Cache static assets
+self.addEventListener('install', (event) => {
+  console.log('Service Worker: Installing...');
   
   event.waitUntil(
-    Promise.all([
-      // Cache static assets
-      caches.open(STATIC_CACHE).then(async (cache) => {
-        console.log("Caching static assets...");
-        const results = await Promise.allSettled(
-          STATIC_ASSETS.map(asset => safeCacheAdd(cache, asset))
-        );
-        
-        const successful = results.filter(r => r.status === 'fulfilled').length;
-        console.log(`Static assets cached: ${successful}/${STATIC_ASSETS.length}`);
-      }),
-      
-      // Initialize dynamic cache
-      caches.open(DYNAMIC_CACHE).then(() => {
-        console.log("Dynamic cache initialized");
+    caches.open(STATIC_CACHE)
+      .then((cache) => {
+        console.log('Service Worker: Caching static assets...');
+        return cache.addAll(STATIC_ASSETS.map(url => new Request(url, {cache: 'reload'})));
       })
-    ])
+      .catch((error) => {
+        console.error('Service Worker: Cache installation failed:', error);
+      })
   );
   
-  // Force activation of new service worker
   self.skipWaiting();
 });
 
-// Activate Service Worker - Clean up old caches
-self.addEventListener("activate", (event) => {
-  console.log("🚀 Service Worker: Activating...");
+// Activate event - Clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker: Activating...');
   
   event.waitUntil(
     Promise.all([
@@ -84,231 +51,285 @@ self.addEventListener("activate", (event) => {
             .filter(cacheName => 
               cacheName !== STATIC_CACHE && 
               cacheName !== DYNAMIC_CACHE &&
-              cacheName.startsWith('nabha-')
+              cacheName.includes('nabha')
             )
             .map(cacheName => {
-              console.log(`🗑️ Deleting old cache: ${cacheName}`);
+              console.log('Service Worker: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             })
         );
       }),
-      
-      // Take control of all pages
+      // Take control of all open pages
       self.clients.claim()
     ])
   );
 });
 
-// Fetch Strategy: Cache First for static, Network First for dynamic
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
+// Fetch event - Serve from cache, fallback to network
+self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
   
-  // Skip Chrome extension and other non-http requests
-  if (!url.protocol.startsWith('http')) {
-    return;
-  }
+  // Skip chrome-extension and other protocols
+  if (!event.request.url.startsWith('http')) return;
   
-  event.respondWith(handleFetch(request));
+  event.respondWith(
+    handleFetch(event.request)
+  );
 });
 
 async function handleFetch(request) {
   const url = new URL(request.url);
-  const pathname = url.pathname;
   
   try {
-    // Strategy 1: Cache First for static assets
-    if (isStaticAsset(pathname)) {
+    // For navigation requests (HTML pages)
+    if (request.mode === 'navigate') {
+      return await handleNavigation(request);
+    }
+    
+    // For static assets (CSS, JS, images)
+    if (isStaticAsset(request.url)) {
       return await cacheFirst(request, STATIC_CACHE);
     }
     
-    // Strategy 2: Network First for dynamic content
-    if (isDynamicAsset(pathname)) {
-      return await networkFirst(request, DYNAMIC_CACHE);
-    }
-    
-    // Strategy 3: Stale While Revalidate for API calls
-    if (pathname.startsWith('/api/')) {
-      return await staleWhileRevalidate(request, DYNAMIC_CACHE);
-    }
-    
-    // Strategy 4: Network First with cache fallback for everything else
+    // For dynamic content and API calls
     return await networkFirst(request, DYNAMIC_CACHE);
     
   } catch (error) {
     console.error('Fetch error:', error);
-    return await handleOfflineFallback(request);
+    return await handleOffline(request);
   }
 }
 
-// Cache First Strategy
+// Handle navigation requests with cache fallback
+async function handleNavigation(request) {
+  try {
+    // Try network first for navigation
+    const networkResponse = await fetch(request);
+    
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+      return networkResponse;
+    }
+    
+    throw new Error('Network response not ok');
+  } catch (error) {
+    // Fallback to cache
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Fallback to index.html for SPA routing
+    const indexResponse = await caches.match(`${BASE_PATH}/index.html`);
+    if (indexResponse) {
+      return indexResponse;
+    }
+    
+    // Last resort - offline page
+    return new Response(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Nabha Vidya - Offline</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              text-align: center; 
+              padding: 50px; 
+              background: #f5f5f5; 
+            }
+            .offline-container { 
+              background: white; 
+              padding: 40px; 
+              border-radius: 10px; 
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+              max-width: 500px; 
+              margin: 0 auto; 
+            }
+            .offline-icon { 
+              font-size: 64px; 
+              margin-bottom: 20px; 
+            }
+            h1 { 
+              color: #1a73e8; 
+              margin-bottom: 20px; 
+            }
+            p { 
+              color: #666; 
+              line-height: 1.6; 
+            }
+            .retry-btn {
+              background: #1a73e8;
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-size: 16px;
+              margin-top: 20px;
+            }
+            .retry-btn:hover {
+              background: #1557b0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="offline-container">
+            <div class="offline-icon">📚</div>
+            <h1>Nabha Vidya</h1>
+            <h2>You're Offline</h2>
+            <p>It looks like you're not connected to the internet. Some features may not be available, but you can still access previously viewed content.</p>
+            <button class="retry-btn" onclick="window.location.reload()">Try Again</button>
+          </div>
+        </body>
+      </html>
+    `, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' }
+    });
+  }
+}
+
+// Cache first strategy for static assets
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
   
   if (cachedResponse) {
-    console.log(`📁 Cache hit: ${request.url}`);
     return cachedResponse;
   }
   
-  console.log(`🌐 Network fetch: ${request.url}`);
   const networkResponse = await fetch(request);
-  
   if (networkResponse.ok) {
-    await cache.put(request, networkResponse.clone());
+    cache.put(request, networkResponse.clone());
   }
   
   return networkResponse;
 }
 
-// Network First Strategy
+// Network first strategy for dynamic content
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   
   try {
-    console.log(`🌐 Network first: ${request.url}`);
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
-      await cache.put(request, networkResponse.clone());
+      cache.put(request, networkResponse.clone());
     }
     
     return networkResponse;
   } catch (error) {
-    console.log(`📁 Network failed, trying cache: ${request.url}`);
     const cachedResponse = await cache.match(request);
-    
     if (cachedResponse) {
       return cachedResponse;
     }
-    
     throw error;
   }
 }
 
-// Stale While Revalidate Strategy
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  // Always fetch in background to update cache
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(err => {
-    console.warn('Background fetch failed:', err);
-  });
-  
-  // Return cached version immediately if available
-  if (cachedResponse) {
-    console.log(`📁 Stale cache served: ${request.url}`);
-    return cachedResponse;
-  }
-  
-  // Otherwise wait for network
-  console.log(`🌐 Fresh fetch: ${request.url}`);
-  return await fetchPromise;
-}
-
-// Offline Fallback Handler
-async function handleOfflineFallback(request) {
-  const url = new URL(request.url);
-  
-  // Return offline page for navigation requests
-  if (request.mode === 'navigate') {
-    const cache = await caches.open(STATIC_CACHE);
-    const fallback = await cache.match('/index.html');
-    
-    if (fallback) {
-      return fallback;
-    }
-  }
-  
-  // Return cached version if available
+// Handle completely offline scenarios
+async function handleOffline(request) {
   const cachedResponse = await caches.match(request);
+  
   if (cachedResponse) {
     return cachedResponse;
   }
   
   // Return a basic offline response
-  return new Response(
-    JSON.stringify({
-      error: 'Offline',
-      message: 'This content is not available offline'
-    }),
-    {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
+  if (request.destination === 'image') {
+    // Return a placeholder for images
+    return new Response(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150">
+        <rect width="200" height="150" fill="#f0f0f0"/>
+        <text x="100" y="75" text-anchor="middle" fill="#999" font-family="Arial" font-size="14">
+          Image Offline
+        </text>
+      </svg>`,
+      { 
+        headers: { 'Content-Type': 'image/svg+xml' },
+        status: 200 
+      }
+    );
+  }
+  
+  return new Response('Content not available offline', {
+    status: 503,
+    headers: { 'Content-Type': 'text/plain' }
+  });
 }
 
-// Helper functions
-function isStaticAsset(pathname) {
-  return pathname.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/) ||
-         pathname === '/' ||
-         pathname.endsWith('.html');
+// Helper function to determine if URL is a static asset
+function isStaticAsset(url) {
+  return url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp4|webm|ogg)$/);
 }
 
-function isDynamicAsset(pathname) {
-  return pathname.startsWith('/assets/videos/') ||
-         pathname.includes('api') ||
-         pathname.includes('user-content');
-}
-
-// Background Sync for offline form submissions
+// Background sync for form submissions when back online
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'feedback-submission') {
-    event.waitUntil(syncFeedbackSubmissions());
+  if (event.tag === 'background-sync') {
+    event.waitUntil(syncPendingData());
   }
 });
 
-async function syncFeedbackSubmissions() {
+async function syncPendingData() {
   try {
-    // Get pending submissions from IndexedDB or cache
-    const pendingSubmissions = await getPendingSubmissions();
+    // Get pending data from IndexedDB or localStorage
+    const pendingData = await getPendingData();
     
-    for (const submission of pendingSubmissions) {
+    for (const item of pendingData) {
       try {
-        await submitFeedback(submission);
-        await removePendingSubmission(submission.id);
-        console.log('✅ Synced feedback submission:', submission.id);
+        await fetch('/api/sync', {
+          method: 'POST',
+          body: JSON.stringify(item),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        await removePendingData(item.id);
       } catch (error) {
-        console.error('❌ Failed to sync submission:', error);
+        console.error('Failed to sync data:', error);
       }
     }
   } catch (error) {
-    console.error('Background sync error:', error);
+    console.error('Background sync failed:', error);
   }
 }
 
-// Push notification handler
+// Placeholder functions - implement based on your data storage needs
+async function getPendingData() {
+  return JSON.parse(localStorage.getItem('pendingData') || '[]');
+}
+
+async function removePendingData(id) {
+  const pending = await getPendingData();
+  const updated = pending.filter(item => item.id !== id);
+  localStorage.setItem('pendingData', JSON.stringify(updated));
+}
+
+// Push notification handling
 self.addEventListener('push', (event) => {
   if (!event.data) return;
   
   const data = event.data.json();
+  
   const options = {
-    body: data.body || 'New notification from Nabha Vidya',
-    icon: '/assets/icons/icon-192.png',
-    badge: '/assets/icons/icon-192.png',
-    tag: data.tag || 'nabha-notification',
-    data: data.data || {},
+    body: data.body || 'New update available',
+    icon: `${BASE_PATH}/icons/icon-192.png`,
+    badge: `${BASE_PATH}/icons/icon-192.png`,
+    tag: 'nabha-notification',
+    data: data,
     actions: [
       {
-        action: 'open',
-        title: 'Open App'
+        action: 'view',
+        title: 'View',
+        icon: `${BASE_PATH}/icons/icon-192.png`
       },
       {
-        action: 'dismiss',
-        title: 'Dismiss'
+        action: 'close',
+        title: 'Close'
       }
     ]
   };
@@ -318,39 +339,15 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Notification click handler
+// Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
-  if (event.action === 'open' || !event.action) {
+  if (event.action === 'view' || !event.action) {
     event.waitUntil(
-      clients.openWindow('/')
+      clients.openWindow(`${BASE_PATH}/`)
     );
   }
 });
 
-// Placeholder functions (implement based on your backend)
-async function getPendingSubmissions() {
-  // Implement based on your storage solution
-  return [];
-}
-
-async function removePendingSubmission(id) {
-  // Implement based on your storage solution
-  return true;
-}
-
-async function submitFeedback(submission) {
-  // Implement based on your API
-  return fetch('/api/feedback', {
-    method: 'POST',
-    body: JSON.stringify(submission),
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-// Version info
-console.log("🎓 Nabha Vidya Service Worker v2.0 loaded successfully!");
-console.log("📊 Cache Strategy: Static assets (Cache First), Dynamic content (Network First)");
-console.log("🔄 Background Sync: Enabled for form submissions");
-console.log("🔔 Push Notifications: Ready");
+console.log('Nabha Vidya Service Worker loaded successfully!');
