@@ -825,8 +825,20 @@ if ("serviceWorker" in navigator) {
 }
 
 
+const ASSETS = [
+  "./",
+  "index.html",
+  "student-dashboard.html",
+  "teacher-dashboard.html",
+  "styles.css",
+  "script.js",
+  "manifest.json",
+  "logo-removebg-preview.png",
+  // icons
+  "assets/icons/icon-192.png",
+  "assets/icons/icon-512.png",
+  // etc.
+];
+
+
 /* ===== End of Script ===== */
-
-
-
-
