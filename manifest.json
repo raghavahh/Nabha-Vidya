@@ -1,7 +1,7 @@
 {
-  "name": "Nabha Vidya LMS",
-  "short_name": "NabhaVidya",
-  "description": "Learning Management System for SIH25019",
+  "name": "Nabha Vidya",
+  "short_name": "Nabha Vidya",
+  "description": "Learning Management System for Nabha",
   "version": "1.0.0",
   "start_url": "/index.html",
   "scope": "/",
@@ -22,3 +22,4 @@
     }
   ]
 }
+
