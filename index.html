@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nabha Vidya - Learning Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="assets/icons/icon-512.png" type="image/png">
+    <!-- PWA Meta Tags -->
+<meta name="theme-color" content="#1a73e8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nabha Vidya">
+<meta name="msapplication-TileColor" content="#1a73e8">
+<meta name="msapplication-config" content="browserconfig.xml">
+
+<!-- Manifest Link -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Favicon and Apple Touch Icons -->
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png">
+<link rel="apple-touch-icon" sizes="114x114" href="icons/icon-114.png">
+<link rel="apple-touch-icon" sizes="76x76" href="icons/icon-76.png">
+<link rel="apple-touch-icon" sizes="72x72" href="icons/icon-72.png">
+<link rel="apple-touch-icon" sizes="60x60" href="icons/icon-60.png">
+<link rel="apple-touch-icon" sizes="57x57" href="icons/icon-57.png">
+
+<!-- Microsoft Tiles -->
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
+
+<meta name="theme-color" content="#1a73e8">
+    
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Logo -->
+        <div class="header">
+            <img src="logo-removebg-preview.png" alt="Nabha Vidya Logo" class="logo">
+            <h1>Learning Management System</h1>
+            <p>Select your role to continue your educational journey</p>
+        </div>
+
+        <!-- User Role Selection -->
+        <div class="user-selection">
+            <div class="user-card" onclick="redirectToLogin('teacher')">
+                <div class="user-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M22 11l-3 3-3-3"></path>
+                    </svg>
+                </div>
+                <h2>Teacher</h2>
+                <p>Access teaching materials and student feedback</p>
+            </div>
+            
+            <div class="user-card" onclick="redirectToLogin('student')">
+                <div class="user-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                        <path d="M22 8.35l-6 6-4-4"></path>
+                    </svg>
+                </div>
+                <h2>Student</h2>
+                <p>Access your classes and learning materials</p>
+            </div>
+        </div>
+
+        <!-- How to Use Section -->
+        <div class="info-section">
+            <h2>How to Use This App</h2>
+            <div class="instructions">
+                <div class="instruction-card">
+                    <div class="step-number">1</div>
+                    <h3>Choose Your Role</h3>
+                    <p>Select either Teacher or Student based on your role</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="step-number">2</div>
+                    <h3>Login</h3>
+                    <p>Enter your credentials (ID as both username and password for demo)</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="step-number">3</div>
+                    <h3>Navigate</h3>
+                    <p>Students: Select Class → Section → Subject → Chapter → Watch Videos</p>
+                </div>
+                <div class="instruction-card">
+                    <div class="step-number">4</div>
+                    <h3>Learn & Feedback</h3>
+                    <p>Watch videos, download for offline use, and provide feedback</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="contact-section">
+            <h2>Need Help?</h2>
+            <p>For queries and support, reach out to us:</p>
+            <a href="mailto:support@nabhavidya.edu" class="contact-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Contact Support
+            </a>
+        </div>
+    </div>
+
+    
+    <script src="script.js"></script>
+</body>
+
+</html>
