@@ -100,17 +100,40 @@ const subjectChapters = {
 /* ===== Navigation Functions ===== */
 function redirectToLogin(userType) {
     if (userType === 'teacher') {
-        // For demo purposes, we'll use a simple prompt for login
-        const teacherId = prompt('Enter Teacher ID:');
-        const password = prompt('Enter Password:');
+        const teacherId = prompt('Enter Teacher ID (format: class8):');
+        const password = prompt('Enter Password (format: sectionb):');
         
-        if (teacherId && password && teacherId === password) {
-            // Store user info (in a real app, this would be more secure)
-            sessionStorage.setItem('userType', 'teacher');
-            sessionStorage.setItem('userId', teacherId);
-            window.location.href = 'teacher-dashboard.html';
-        } else {
-            alert('Invalid credentials. Teacher ID and Password must match for demo.');
+        console.log('Teacher ID entered:', teacherId);
+        console.log('Password entered:', password);
+        
+        if (teacherId && password) {
+            const classMatch = teacherId.toLowerCase().match(/class(\d+)/);
+            const sectionMatch = password.toLowerCase().match(/section([abc])/);
+            
+            console.log('Class match:', classMatch);
+            console.log('Section match:', sectionMatch);
+            
+            if (classMatch && sectionMatch) {
+                const classNum = classMatch[1];
+                const section = sectionMatch[1].toUpperCase();
+                
+                console.log('Extracted class:', classNum);
+                console.log('Extracted section:', section);
+                
+                if (['6', '7', '8', '9', '10'].includes(classNum)) {
+                    sessionStorage.setItem('userType', 'teacher');
+                    sessionStorage.setItem('userId', teacherId);
+                    sessionStorage.setItem('selectedClass', classNum);
+                    sessionStorage.setItem('selectedSection', section);
+                    
+                    alert(`Login successful! Going to Class ${classNum}, Section ${section}`);
+                    window.location.href = 'teacher-dashboard.html';
+                } else {
+                    alert('Invalid class number.');
+                }
+            } else {
+                alert('Format error. Use exactly: class8 and sectionb');
+            }
         }
     } else if (userType === 'student') {
         const studentId = prompt('Enter Student ID:');
@@ -397,46 +420,24 @@ function initializeDashboard() {
     if (teacherNameElement && userType === 'teacher' && userId) {
         teacherNameElement.textContent = `Welcome, ${userId}`;
         loadFeedbackData();
-    }
-}
-
-/* ===== Teacher Dashboard Functions ===== */
-function loadFeedbackData() {
-    // In a real application, this would fetch from Google Forms API
-    // For demo purposes, we'll simulate dynamic feedback loading
-    
-    const feedbackContainer = document.getElementById('feedbackContainer');
-    const noFeedback = document.getElementById('noFeedback');
-    
-    if (!feedbackContainer) return;
-    
-    // Simulate loading feedback from local storage or API
-    try {
-        const storedFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
-        const activities = JSON.parse(localStorage.getItem('studentActivities') || '[]');
         
-        // If no feedback available, show empty state
-        if (storedFeedback.length === 0) {
-            feedbackContainer.style.display = 'none';
-            if (noFeedback) noFeedback.style.display = 'block';
-            return;
+        // Auto-navigate if teacher has pre-selected class and section
+        const storedClass = sessionStorage.getItem('selectedClass');
+        const storedSection = sessionStorage.getItem('selectedSection');
+        
+        if (storedClass && storedSection) {
+            // Set global variables
+            selectedClass = storedClass;
+            selectedSection = storedSection;
+            
+            // Hide class and section selection, show subject selection
+            hideElement('classSelection');
+            hideElement('sectionSelection');
+            showElement('subjectSelection');
+            
+            // Update the subject header
+            updateSubjectHeader();
         }
-        
-        // Clear existing feedback
-        feedbackContainer.innerHTML = '';
-        
-        // Display feedback
-        storedFeedback.forEach(feedback => {
-            const feedbackCard = createFeedbackCard(feedback);
-            feedbackContainer.appendChild(feedbackCard);
-        });
-        
-        feedbackContainer.style.display = 'grid';
-        if (noFeedback) noFeedback.style.display = 'none';
-        
-    } catch (error) {
-        console.error('Error loading feedback data:', error);
-        if (noFeedback) noFeedback.style.display = 'block';
     }
 }
 
@@ -818,13 +819,6 @@ function initializeDashboard() {
 }
 
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker registered"))
-    .catch(err => console.error("SW registration failed:", err));
-}
-
-
 const ASSETS = [
   "./",
   "index.html",
@@ -840,5 +834,39 @@ const ASSETS = [
   // etc.
 ];
 
+
+// Auto-navigation for teachers - add this at the end of script.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing initialization code...
+    initializeDashboard();
+    
+    // Additional check for teacher auto-navigation
+    setTimeout(function() {
+        const userType = sessionStorage.getItem('userType');
+        const storedClass = sessionStorage.getItem('selectedClass');
+        const storedSection = sessionStorage.getItem('selectedSection');
+        
+        if (userType === 'teacher' && storedClass && storedSection) {
+            // Set global variables
+            window.selectedClass = storedClass;
+            window.selectedSection = storedSection;
+            
+            // Force navigation to subject selection
+            const classSelection = document.getElementById('classSelection');
+            const sectionSelection = document.getElementById('sectionSelection');
+            const subjectSelection = document.getElementById('subjectSelection');
+            
+            if (classSelection) classSelection.classList.add('hidden');
+            if (sectionSelection) sectionSelection.classList.add('hidden');
+            if (subjectSelection) subjectSelection.classList.remove('hidden');
+            
+            // Update header
+            const subjHeader = document.querySelector('#subjectSelection .step-header h2');
+            if (subjHeader) {
+                subjHeader.textContent = `Select Subject (Class ${storedClass} - Section ${storedSection})`;
+            }
+        }
+    }, 500);
+});
 
 /* ===== End of Script ===== */
